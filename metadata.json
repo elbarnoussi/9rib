@@ -1,0 +1,6 @@
+{
+  "name": "Chefchaouen Delivery",
+  "description": "Mobile-first on-demand delivery app for Chefchaouen, Morocco with Customer, Courier, and Admin experiences in Moroccan Darija and French.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

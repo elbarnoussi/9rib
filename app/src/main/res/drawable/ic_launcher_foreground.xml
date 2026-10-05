@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Fast Delivery Scooter & Parcel Vector Silhouette inside 66dp safe zone (21-87) -->
+    <!-- Delivery parcel box on back -->
+    <path
+        android:fillColor="#FFD54F"
+        android:pathData="M30,44 L44,44 L44,56 L30,56 Z" />
+    <path
+        android:fillColor="#FFA000"
+        android:pathData="M35,44 L39,44 L39,56 L35,56 Z" />
+    <!-- Scooter body and wheels -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M70,44 C67,44 64.5,46 64,48.5 L58,48.5 C56.5,45 53,42.5 49,42.5 L39,42.5 C36.8,42.5 35,44.3 35,46.5 L35,57 L45,57 C45,57 48,64 54,64 L62,64 L67.5,52.5 L73,52.5 L76,64 L79,64 L73.5,46 C72.8,44.8 71.5,44 70,44 Z M42,67 C38.7,67 36,69.7 36,73 C36,76.3 38.7,79 42,79 C45.3,79 48,76.3 48,73 C48,69.7 45.3,67 42,67 Z M42,75.5 C40.6,75.5 39.5,74.4 39.5,73 C39.5,71.6 40.6,70.5 42,70.5 C43.4,70.5 44.5,71.6 44.5,73 C44.5,74.4 43.4,75.5 42,75.5 Z M72,67 C68.7,67 66,69.7 66,73 C66,76.3 68.7,79 72,79 C75.3,79 78,76.3 78,73 C78,69.7 75.3,67 72,67 Z M72,75.5 C70.6,75.5 69.5,74.4 69.5,73 C69.5,71.6 70.6,70.5 72,70.5 C73.4,70.5 74.5,71.6 74.5,73 C74.5,74.4 73.4,75.5 72,75.5 Z" />
+    <!-- Motion speed streaks -->
+    <path
+        android:fillColor="#E3F2FD"
+        android:pathData="M24,49 L28,49 L27,51 L23,51 Z M21,55 L27,55 L26,57 L20,57 Z M25,61 L31,61 L30,63 L24,63 Z" />
+    <!-- Courier pin / helmet accent -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M52,33 C55.3,33 58,35.7 58,39 C58,42.3 55.3,45 52,45 C48.7,45 46,42.3 46,39 C46,35.7 48.7,33 52,33 Z" />
+    <path
+        android:fillColor="#FFD54F"
+        android:pathData="M53,35 L57,38 L53,40 Z" />
+</vector>
