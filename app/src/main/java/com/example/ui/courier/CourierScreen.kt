@@ -26,6 +26,8 @@ import com.example.data.model.OrderEntity
 import com.example.data.model.OrderStatus
 import com.example.ui.components.ContactActionButtons
 import com.example.ui.components.OrderStatusPipeline
+import com.example.ui.components.RegisterCourierDialog
+import com.example.ui.components.SwitchCourierDialog
 import com.example.ui.localization.AppStrings
 import com.example.ui.theme.*
 import com.example.ui.viewmodel.DeliveryViewModel
@@ -60,67 +62,115 @@ fun CourierScreen(
     var cashCollectedInput by remember { mutableStateOf("") }
     var receiptNoteInput by remember { mutableStateOf("") }
 
-    LazyColumn(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-        contentPadding = PaddingValues(top = 16.dp, bottom = 32.dp)
-    ) {
-        // 1. Courier Profile & Approval Status Header
-        item {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                shape = RoundedCornerShape(16.dp),
-                elevation = CardDefaults.cardElevation(2.dp)
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(
-                                modifier = Modifier
-                                    .size(44.dp)
-                                    .background(ChaouenCobalt, CircleShape),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(Icons.Default.DeliveryDining, contentDescription = null, tint = Color.White)
+    Box(modifier = modifier.fillMaxSize()) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            contentPadding = PaddingValues(top = 16.dp, bottom = 32.dp)
+        ) {
+            // 1. Courier Profile & Approval Status Header
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    shape = RoundedCornerShape(16.dp),
+                    elevation = CardDefaults.cardElevation(2.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(44.dp)
+                                        .background(ChaouenCobalt, CircleShape),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(Icons.Default.DeliveryDining, contentDescription = null, tint = Color.White)
+                                }
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column {
+                                    Text(
+                                        text = courier?.courierName ?: "حمزة البقالي",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 15.sp,
+                                        color = Color(0xFF0F172A)
+                                    )
+                                    Text(
+                                        text = courier?.vehicleType ?: "Moped (موطور)",
+                                        fontSize = 12.sp,
+                                        color = Color.Gray
+                                    )
+                                }
                             }
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Column {
-                                Text(
-                                    text = courier?.courierName ?: "حمزة البقالي",
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 15.sp,
-                                    color = Color(0xFF0F172A)
-                                )
-                                Text(
-                                    text = courier?.vehicleType ?: "Moped (موطور)",
-                                    fontSize = 12.sp,
-                                    color = Color.Gray
-                                )
+
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                IconButton(
+                                    onClick = { viewModel.setShowSwitchCourierDialog(true) },
+                                    modifier = Modifier
+                                        .size(34.dp)
+                                        .testTag("switch_courier_button")
+                                ) {
+                                    Icon(Icons.Default.SwapHoriz, contentDescription = "Switch Courier", tint = ChaouenCobalt)
+                                }
+
+                                IconButton(
+                                    onClick = { viewModel.setShowRegisterCourierDialog(true) },
+                                    modifier = Modifier
+                                        .size(34.dp)
+                                        .testTag("register_courier_button")
+                                ) {
+                                    Icon(Icons.Default.PersonAdd, contentDescription = "Register Courier", tint = MoroccanMint)
+                                }
+
+                                // Approval Status Badge
+                                Surface(
+                                    color = if (isApproved) Color(0xFFE8F5E9) else Color(0xFFFFF3E0),
+                                    shape = RoundedCornerShape(8.dp)
+                                ) {
+                                    Text(
+                                        text = if (isApproved) AppStrings.courierApprovedStatus(currentLanguage)
+                                               else AppStrings.courierPendingApproval(currentLanguage),
+                                        color = if (isApproved) MoroccanMint else MoroccanAmberDark,
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                    )
+                                }
                             }
                         }
 
-                        // Approval Status Badge
-                        Surface(
-                            color = if (isApproved) Color(0xFFE8F5E9) else Color(0xFFFFF3E0),
-                            shape = RoundedCornerShape(8.dp)
-                        ) {
-                            Text(
-                                text = if (isApproved) AppStrings.courierApprovedStatus(currentLanguage)
-                                       else AppStrings.courierPendingApproval(currentLanguage),
-                                color = if (isApproved) MoroccanMint else MoroccanAmberDark,
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                            )
+                        // Success / Toast message
+                        courierState.toastMessage?.let { msg ->
+                            Spacer(modifier = Modifier.height(10.dp))
+                            Surface(
+                                color = Color(0xFFF0FDF4),
+                                shape = RoundedCornerShape(8.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(text = msg, fontSize = 11.sp, color = MoroccanMint, fontWeight = FontWeight.Bold)
+                                    IconButton(
+                                        onClick = { viewModel.clearCourierToast() },
+                                        modifier = Modifier.size(20.dp)
+                                    ) {
+                                        Icon(Icons.Default.Close, contentDescription = null, tint = MoroccanMint, modifier = Modifier.size(14.dp))
+                                    }
+                                }
+                            }
                         }
-                    }
 
                     Spacer(modifier = Modifier.height(14.dp))
                     HorizontalDivider(color = Color(0xFFECEFF1))
@@ -551,4 +601,30 @@ fun CourierScreen(
             }
         )
     }
+
+    // Dialogs for registering a new courier and switching couriers
+    RegisterCourierDialog(
+        isOpen = courierState.showRegisterDialog,
+        onDismiss = { viewModel.setShowRegisterCourierDialog(false) },
+        onRegister = { name, phone, vehicleType, limit, address ->
+            viewModel.registerNewCourier(name, phone, vehicleType, limit, address)
+        },
+        currentLanguage = currentLanguage
+    )
+
+    SwitchCourierDialog(
+        isOpen = courierState.showSwitchDialog,
+        onDismiss = { viewModel.setShowSwitchCourierDialog(false) },
+        currentCourierId = courierState.currentCourierId,
+        couriers = allCouriers,
+        onSelectCourier = { courierId ->
+            viewModel.switchCourier(courierId)
+        },
+        onOpenRegister = {
+            viewModel.setShowSwitchCourierDialog(false)
+            viewModel.setShowRegisterCourierDialog(true)
+        },
+        currentLanguage = currentLanguage
+    )
+}
 }

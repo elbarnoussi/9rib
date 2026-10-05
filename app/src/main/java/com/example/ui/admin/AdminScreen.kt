@@ -36,6 +36,7 @@ fun AdminScreen(
     val allCouriers by viewModel.allCouriers.collectAsStateWithLifecycle()
     val allOrders by viewModel.allOrders.collectAsStateWithLifecycle()
     val allLedger by viewModel.allLedger.collectAsStateWithLifecycle()
+    val registeredClients by viewModel.registeredClients.collectAsStateWithLifecycle()
     val currentLanguage by viewModel.currentLanguage.collectAsStateWithLifecycle()
 
     val isAreaApproved = serviceArea?.isApproved ?: true
@@ -131,6 +132,21 @@ fun AdminScreen(
                 selected = selectedTab == 2,
                 onClick = { selectedTab = 2 },
                 text = { Text("المالية والطلبات", fontSize = 12.sp, fontWeight = FontWeight.Bold) }
+            )
+            Tab(
+                selected = selectedTab == 3,
+                onClick = { selectedTab = 3 },
+                text = {
+                    BadgedBox(
+                        badge = {
+                            if (registeredClients.isNotEmpty()) {
+                                Badge { Text("${registeredClients.size}") }
+                            }
+                        }
+                    ) {
+                        Text("الزبائن", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
             )
         }
 
@@ -476,6 +492,61 @@ fun AdminScreen(
                                         fontSize = 10.sp,
                                         color = Color.Gray
                                     )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            3 -> {
+                // Registered Clients List
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                    contentPadding = PaddingValues(bottom = 32.dp)
+                ) {
+                    item {
+                        Text(
+                            text = "قائمة الزبائن المسجلين بشفشاون (${registeredClients.size})",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp,
+                            color = ChaouenCobalt
+                        )
+                    }
+
+                    if (registeredClients.isEmpty()) {
+                        item {
+                            Text("لا يوجد زبائن مسجلون بعد", fontSize = 12.sp, color = Color.Gray)
+                        }
+                    } else {
+                        items(registeredClients) { client ->
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = CardDefaults.cardColors(containerColor = Color.White),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(14.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(36.dp)
+                                                .background(Color(0xFFE3F2FD), CircleShape),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(Icons.Default.Person, contentDescription = null, tint = ChaouenPrimary)
+                                        }
+                                        Spacer(modifier = Modifier.width(10.dp))
+                                        Column {
+                                            Text(client.fullName, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                                            Text(client.phone, fontSize = 11.sp, color = Color.Gray)
+                                            Text(client.address, fontSize = 10.sp, color = Color.DarkGray)
+                                        }
+                                    }
                                 }
                             }
                         }

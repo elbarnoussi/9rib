@@ -13,6 +13,10 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 data class CustomerUiState(
+    val customerId: String = "customer_1",
+    val customerName: String = "فاطمة الزهراء العلمي (Fatima Zahra)",
+    val customerPhone: String = "+212 663-774411",
+    val customerAddress: String = "درب الصور، حي الأندلس، شفشاون",
     val deliveryPin: GeoPoint = ChefchaouenGeoFence.CHEFCHAOUEN_CENTER,
     val isInsideServiceArea: Boolean = true,
     val serviceAreaErrorMessage: String? = null,
@@ -24,14 +28,20 @@ data class CustomerUiState(
     val deliveryFeeMad: Double = 12.0,
     val isSubmitting: Boolean = false,
     val submissionError: String? = null,
-    val activeOrderId: Long? = null
+    val activeOrderId: Long? = null,
+    val showRegisterDialog: Boolean = false,
+    val showSwitchDialog: Boolean = false,
+    val toastMessage: String? = null
 )
 
 data class CourierUiState(
     val currentCourierId: String = "courier_1",
     val isOnline: Boolean = true,
     val purchaseLimitMad: Double = 350.0,
-    val isApproved: Boolean = true
+    val isApproved: Boolean = true,
+    val showRegisterDialog: Boolean = false,
+    val showSwitchDialog: Boolean = false,
+    val toastMessage: String? = null
 )
 
 class DeliveryViewModel(application: Application) : AndroidViewModel(application) {
@@ -56,6 +66,7 @@ class DeliveryViewModel(application: Application) : AndroidViewModel(application
     // Database reactive streams
     val availableCouriers: StateFlow<List<CourierPresenceEntity>>
     val allCouriers: StateFlow<List<CourierPresenceEntity>>
+    val registeredClients: StateFlow<List<UserProfileEntity>>
     val allOrders: StateFlow<List<OrderEntity>>
     val serviceArea: StateFlow<ServiceAreaEntity?>
     val allLedger: StateFlow<List<CashLedgerEntryEntity>>
@@ -70,6 +81,9 @@ class DeliveryViewModel(application: Application) : AndroidViewModel(application
         allCouriers = repository.allCouriers
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+        registeredClients = repository.registeredClients
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
         allOrders = repository.allOrders
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
@@ -82,7 +96,6 @@ class DeliveryViewModel(application: Application) : AndroidViewModel(application
         // Seed initial data
         viewModelScope.launch {
             repository.seedInitialDataIfNeeded()
-            // Verify default pin
             validateCurrentPin(_customerState.value.deliveryPin)
         }
     }
@@ -99,7 +112,48 @@ class DeliveryViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-    // --- Customer Actions ---
+    // --- Customer Actions & Registration ---
+    fun setShowRegisterClientDialog(show: Boolean) {
+        _customerState.update { it.copy(showRegisterDialog = show) }
+    }
+
+    fun setShowSwitchClientDialog(show: Boolean) {
+        _customerState.update { it.copy(showSwitchDialog = show) }
+    }
+
+    fun registerNewClient(fullName: String, phone: String, address: String) {
+        viewModelScope.launch {
+            val user = repository.registerNewClient(fullName, phone, address)
+            _customerState.update {
+                it.copy(
+                    customerId = user.id,
+                    customerName = user.fullName,
+                    customerPhone = user.phone,
+                    customerAddress = user.address,
+                    showRegisterDialog = false,
+                    toastMessage = "مرحباً بك! تم تسجيل حسابك بنجاح (${user.fullName})"
+                )
+            }
+        }
+    }
+
+    fun switchClient(user: UserProfileEntity) {
+        _customerState.update {
+            it.copy(
+                customerId = user.id,
+                customerName = user.fullName,
+                customerPhone = user.phone,
+                customerAddress = user.address,
+                showSwitchDialog = false,
+                toastMessage = "تم التبديل إلى حساب: ${user.fullName}"
+            )
+        }
+    }
+
+    fun clearCustomerToast() {
+        _customerState.update { it.copy(toastMessage = null) }
+    }
+
     fun onPinSelected(point: GeoPoint) {
         _customerState.update { it.copy(deliveryPin = point) }
         validateCurrentPin(point)
@@ -171,14 +225,14 @@ class DeliveryViewModel(application: Application) : AndroidViewModel(application
 
         viewModelScope.launch {
             val result = repository.submitOrder(
-                customerId = "customer_1",
-                customerName = "فاطمة الزهراء العلمي (Fatima Zahra)",
-                customerPhone = "+212 663-774411",
+                customerId = state.customerId,
+                customerName = state.customerName,
+                customerPhone = state.customerPhone,
                 courierId = courier.courierId,
                 requestType = state.requestType,
                 shopName = state.shopName,
                 itemDescription = state.itemDescription,
-                deliveryAddress = "شفشاون (موقع محدد على الخريطة)",
+                deliveryAddress = "${state.customerAddress} - موقع محدد بالخريطة",
                 deliveryPoint = state.deliveryPin,
                 estimatedCostMad = state.estimatedCostMad,
                 deliveryFeeMad = state.deliveryFeeMad
@@ -198,7 +252,7 @@ class DeliveryViewModel(application: Application) : AndroidViewModel(application
                     _customerState.update {
                         it.copy(
                             isSubmitting = false,
-                            selectedCourier = null, // prompt to select another
+                            selectedCourier = null,
                             submissionError = result.reason
                         )
                     }
@@ -243,7 +297,55 @@ class DeliveryViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-    // --- Courier Actions ---
+    // --- Courier Actions & Registration ---
+    fun setShowRegisterCourierDialog(show: Boolean) {
+        _courierState.update { it.copy(showRegisterDialog = show) }
+    }
+
+    fun setShowSwitchCourierDialog(show: Boolean) {
+        _courierState.update { it.copy(showSwitchDialog = show) }
+    }
+
+    fun registerNewCourier(
+        fullName: String,
+        phone: String,
+        vehicleType: String,
+        purchaseLimitMad: Double,
+        address: String
+    ) {
+        viewModelScope.launch {
+            val courier = repository.registerNewCourier(fullName, phone, vehicleType, purchaseLimitMad, address)
+            _courierState.update {
+                it.copy(
+                    currentCourierId = courier.courierId,
+                    purchaseLimitMad = courier.purchaseLimitMad,
+                    isOnline = false,
+                    isApproved = false,
+                    showRegisterDialog = false,
+                    toastMessage = "تم تسجيل طلبك بنجاح! حسابك بانتظار موافقة الإدارة."
+                )
+            }
+        }
+    }
+
+    fun switchCourier(courierId: String) {
+        val courier = allCouriers.value.find { it.courierId == courierId }
+        _courierState.update {
+            it.copy(
+                currentCourierId = courierId,
+                purchaseLimitMad = courier?.purchaseLimitMad ?: 350.0,
+                isOnline = courier?.isOnline ?: false,
+                isApproved = courier?.isApproved ?: false,
+                showSwitchDialog = false,
+                toastMessage = "تم الانتقال إلى حساب: ${courier?.courierName ?: courierId}"
+            )
+        }
+    }
+
+    fun clearCourierToast() {
+        _courierState.update { it.copy(toastMessage = null) }
+    }
+
     fun setCourierOnline(online: Boolean) {
         val courierId = _courierState.value.currentCourierId
         _courierState.update { it.copy(isOnline = online) }
@@ -288,7 +390,7 @@ class DeliveryViewModel(application: Application) : AndroidViewModel(application
         receiptNote: String
     ) {
         val courierId = _courierState.value.currentCourierId
-        val appCommission = 2.0 // Fixed 2 MAD per order
+        val appCommission = 2.0
         viewModelScope.launch {
             repository.finalizeDeliveryWithLedger(
                 orderId = orderId,

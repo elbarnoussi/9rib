@@ -14,6 +14,9 @@ interface DeliveryDao {
     @Query("SELECT * FROM user_profiles")
     fun getAllUsers(): Flow<List<UserProfileEntity>>
 
+    @Query("SELECT * FROM user_profiles WHERE role = :role ORDER BY createdAt DESC")
+    fun getUsersByRole(role: String): Flow<List<UserProfileEntity>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertUser(user: UserProfileEntity)
 

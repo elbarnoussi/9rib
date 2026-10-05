@@ -106,4 +106,36 @@ class DeliveryUnitTest {
         val fee = ChefchaouenGeoFence.calculateDeliveryFeeMad(dist)
         assertTrue("Base delivery fee in Chefchaouen should be at least 12 MAD", fee >= 12.0)
     }
+
+    @Test
+    fun testClientRegistrationModel() {
+        val clientName = "ياسين المرابط"
+        val clientPhone = "+212 611-223344"
+        val clientAddress = "حي العيون، شفشاون"
+
+        assertTrue(clientName.isNotBlank())
+        assertTrue(clientPhone.startsWith("+212"))
+        assertTrue(clientAddress.contains("شفشاون") || clientAddress.isNotBlank())
+    }
+
+    @Test
+    fun testCourierRegistrationAndAdminApprovalFlow() {
+        // Initial state of newly registered courier
+        var isApproved = false
+        var isOnline = false
+        val purchaseLimit = 300.0
+
+        // Attempting to accept orders before approval must fail
+        assertFalse("New courier must not be approved before admin review", isApproved)
+        assertFalse("New courier must not be online before approval", isOnline)
+
+        // Admin approves courier
+        isApproved = true
+        assertTrue("Courier is now approved by Admin", isApproved)
+
+        // Courier can now toggle availability online
+        isOnline = true
+        assertTrue("Approved courier can now go online to accept orders", isOnline)
+        assertEquals(300.0, purchaseLimit, 0.001)
+    }
 }

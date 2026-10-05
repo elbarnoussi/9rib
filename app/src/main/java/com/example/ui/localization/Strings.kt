@@ -193,4 +193,55 @@ object AppStrings {
         AppLanguage.DARIJA -> "غير متاح (متوقف عن العمل)"
         AppLanguage.FRENCH -> "Indisponible"
     }
+
+    // --- Client & Courier Registration Strings ---
+    fun registerNewClientTitle(lang: AppLanguage): String = when (lang) {
+        AppLanguage.DARIJA -> "تسجيل زبون جديد"
+        AppLanguage.FRENCH -> "Inscrire un nouveau client"
+    }
+
+    fun registerNewCourierTitle(lang: AppLanguage): String = when (lang) {
+        AppLanguage.DARIJA -> "تسجيل ليفروغ جديد"
+        AppLanguage.FRENCH -> "Devenir livreur à Chefchaouen"
+    }
+
+    fun switchAccountTitle(lang: AppLanguage): String = when (lang) {
+        AppLanguage.DARIJA -> "تبديل الحساب"
+        AppLanguage.FRENCH -> "Changer de profil"
+    }
+
+    fun fullNameLabel(lang: AppLanguage): String = when (lang) {
+        AppLanguage.DARIJA -> "الاسم الكامل (Nom complet)"
+        AppLanguage.FRENCH -> "Nom complet"
+    }
+
+    fun phoneLabel(lang: AppLanguage): String = when (lang) {
+        AppLanguage.DARIJA -> "رقم الهاتف المغربي (+212 6... / +212 7...)"
+        AppLanguage.FRENCH -> "Numéro de téléphone (+212...)"
+    }
+
+    fun addressLabel(lang: AppLanguage): String = when (lang) {
+        AppLanguage.DARIJA -> "الحي أو العنوان بشفشاون (مثال: حي الأندلس، درب الصور)"
+        AppLanguage.FRENCH -> "Quartier ou adresse à Chefchaouen"
+    }
+
+    fun vehicleTypeLabel(lang: AppLanguage): String = when (lang) {
+        AppLanguage.DARIJA -> "وسيلة التنقل"
+        AppLanguage.FRENCH -> "Moyen de transport"
+    }
+
+    fun purchaseLimitInputLabel(lang: AppLanguage): String = when (lang) {
+        AppLanguage.DARIJA -> "سقف الشراء النقدي الأولي (درهم)"
+        AppLanguage.FRENCH -> "Plafond d'achat initial (MAD)"
+    }
+
+    fun confirmRegisterBtn(lang: AppLanguage): String = when (lang) {
+        AppLanguage.DARIJA -> "تأكيد وإنشاء الحساب"
+        AppLanguage.FRENCH -> "Créer mon compte"
+    }
+
+    fun cancelBtn(lang: AppLanguage): String = when (lang) {
+        AppLanguage.DARIJA -> "إلغاء"
+        AppLanguage.FRENCH -> "Annuler"
+    }
 }

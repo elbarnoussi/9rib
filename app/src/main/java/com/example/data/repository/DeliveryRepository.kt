@@ -21,6 +21,7 @@ class DeliveryRepository(private val dao: DeliveryDao) {
     val allOrders: Flow<List<OrderEntity>> = dao.getAllOrders()
     val availableCouriers: Flow<List<CourierPresenceEntity>> = dao.getAvailableCouriers()
     val allCouriers: Flow<List<CourierPresenceEntity>> = dao.getAllCouriers()
+    val registeredClients: Flow<List<UserProfileEntity>> = dao.getUsersByRole(UserRole.CUSTOMER.name)
     val serviceArea: Flow<ServiceAreaEntity?> = dao.getServiceArea()
     val allLedgerEntries: Flow<List<CashLedgerEntryEntity>> = dao.getAllLedgerEntries()
 
@@ -29,6 +30,64 @@ class DeliveryRepository(private val dao: DeliveryDao) {
     fun getOrderById(orderId: Long): Flow<OrderEntity?> = dao.getOrderById(orderId)
     fun getOrderEvents(orderId: Long): Flow<List<OrderEventEntity>> = dao.getOrderEvents(orderId)
     fun getCourierLedger(courierId: String): Flow<List<CashLedgerEntryEntity>> = dao.getCourierLedger(courierId)
+
+    /**
+     * Registers a new customer profile in Chefchaouen.
+     */
+    suspend fun registerNewClient(fullName: String, phone: String, address: String): UserProfileEntity = withContext(Dispatchers.IO) {
+        val newId = "customer_${System.currentTimeMillis()}"
+        val user = UserProfileEntity(
+            id = newId,
+            role = UserRole.CUSTOMER.name,
+            fullName = fullName.trim(),
+            phone = phone.trim(),
+            address = address.trim(),
+            isApproved = true
+        )
+        dao.insertUser(user)
+        user
+    }
+
+    /**
+     * Registers a new delivery courier in Chefchaouen (Pending Admin approval).
+     */
+    suspend fun registerNewCourier(
+        fullName: String,
+        phone: String,
+        vehicleType: String,
+        purchaseLimitMad: Double,
+        address: String
+    ): CourierPresenceEntity = withContext(Dispatchers.IO) {
+        val newId = "courier_${System.currentTimeMillis()}"
+        // Add to user profiles
+        val user = UserProfileEntity(
+            id = newId,
+            role = UserRole.COURIER.name,
+            fullName = fullName.trim(),
+            phone = phone.trim(),
+            address = address.trim(),
+            isApproved = false // Pending admin approval
+        )
+        dao.insertUser(user)
+
+        // Add to courier presence
+        val courier = CourierPresenceEntity(
+            courierId = newId,
+            courierName = fullName.trim(),
+            courierPhone = phone.trim(),
+            isOnline = false, // starts offline until approved
+            isBusy = false,
+            currentLat = ChefchaouenGeoFence.CHEFCHAOUEN_CENTER.lat,
+            currentLng = ChefchaouenGeoFence.CHEFCHAOUEN_CENTER.lng,
+            vehicleType = vehicleType.trim(),
+            rating = 5.0,
+            totalDeliveries = 0,
+            purchaseLimitMad = purchaseLimitMad,
+            isApproved = false // Must be approved by admin
+        )
+        dao.insertCourier(courier)
+        courier
+    }
 
     /**
      * Seeds initial database state if empty.

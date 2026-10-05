@@ -33,6 +33,8 @@ import com.example.data.model.RequestType
 import com.example.ui.components.ChefchaouenMapCanvas
 import com.example.ui.components.ContactActionButtons
 import com.example.ui.components.OrderStatusPipeline
+import com.example.ui.components.RegisterClientDialog
+import com.example.ui.components.SwitchClientDialog
 import com.example.ui.localization.AppStrings
 import com.example.ui.theme.*
 import com.example.ui.viewmodel.DeliveryViewModel
@@ -46,6 +48,7 @@ fun CustomerScreen(
     val availableCouriers by viewModel.availableCouriers.collectAsStateWithLifecycle()
     val currentLanguage by viewModel.currentLanguage.collectAsStateWithLifecycle()
     val serviceArea by viewModel.serviceArea.collectAsStateWithLifecycle()
+    val registeredClients by viewModel.registeredClients.collectAsStateWithLifecycle()
 
     // If active order exists, observe it
     val activeOrderId = customerState.activeOrderId
@@ -73,15 +76,115 @@ fun CustomerScreen(
         } ?: ChefchaouenGeoFence.DEFAULT_SERVICE_POLYGON
     }
 
-    LazyColumn(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-        contentPadding = PaddingValues(top = 16.dp, bottom = 32.dp)
-    ) {
-        // Active Order Tracking View
-        if (activeOrder != null) {
+    Box(modifier = modifier.fillMaxSize()) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            contentPadding = PaddingValues(top = 16.dp, bottom = 32.dp)
+        ) {
+            // Customer Profile Header & New Client Registration Affordance
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    shape = RoundedCornerShape(14.dp),
+                    elevation = CardDefaults.cardElevation(2.dp)
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(38.dp)
+                                        .background(Color(0xFFE3F2FD), CircleShape),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Person,
+                                        contentDescription = null,
+                                        tint = ChaouenPrimary,
+                                        modifier = Modifier.size(22.dp)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(10.dp))
+                                Column {
+                                    Text(
+                                        text = customerState.customerName,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 14.sp,
+                                        color = Color(0xFF0F172A)
+                                    )
+                                    Text(
+                                        text = "${customerState.customerPhone} • ${customerState.customerAddress.take(28)}",
+                                        fontSize = 11.sp,
+                                        color = Color.Gray
+                                    )
+                                }
+                            }
+
+                            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                IconButton(
+                                    onClick = { viewModel.setShowSwitchClientDialog(true) },
+                                    modifier = Modifier
+                                        .size(34.dp)
+                                        .testTag("switch_client_button")
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.SwapHoriz,
+                                        contentDescription = "Switch Client",
+                                        tint = ChaouenCobalt
+                                    )
+                                }
+                                IconButton(
+                                    onClick = { viewModel.setShowRegisterClientDialog(true) },
+                                    modifier = Modifier
+                                        .size(34.dp)
+                                        .testTag("register_client_button")
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.PersonAdd,
+                                        contentDescription = "Add Client",
+                                        tint = MoroccanMint
+                                    )
+                                }
+                            }
+                        }
+
+                        // Success / Toast message
+                        customerState.toastMessage?.let { msg ->
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Surface(
+                                color = Color(0xFFF0FDF4),
+                                shape = RoundedCornerShape(8.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(text = msg, fontSize = 11.sp, color = MoroccanMint, fontWeight = FontWeight.Bold)
+                                    IconButton(
+                                        onClick = { viewModel.clearCustomerToast() },
+                                        modifier = Modifier.size(20.dp)
+                                    ) {
+                                        Icon(Icons.Default.Close, contentDescription = null, tint = MoroccanMint, modifier = Modifier.size(14.dp))
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Active Order Tracking View
+            if (activeOrder != null) {
             item {
                 ActiveOrderCard(
                     order = activeOrder,
@@ -411,6 +514,32 @@ fun CustomerScreen(
                 }
             }
         }
+    }
+
+    // Dialogs for registering a new client and switching clients
+        RegisterClientDialog(
+            isOpen = customerState.showRegisterDialog,
+            onDismiss = { viewModel.setShowRegisterClientDialog(false) },
+            onRegister = { name, phone, address ->
+                viewModel.registerNewClient(name, phone, address)
+            },
+            currentLanguage = currentLanguage
+        )
+
+        SwitchClientDialog(
+            isOpen = customerState.showSwitchDialog,
+            onDismiss = { viewModel.setShowSwitchClientDialog(false) },
+            currentClientId = customerState.customerId,
+            clients = registeredClients,
+            onSelectClient = { client ->
+                viewModel.switchClient(client)
+            },
+            onOpenRegister = {
+                viewModel.setShowSwitchClientDialog(false)
+                viewModel.setShowRegisterClientDialog(true)
+            },
+            currentLanguage = currentLanguage
+        )
     }
 }
 
